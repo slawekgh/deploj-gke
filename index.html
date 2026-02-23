@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>deploj-gke — Claude Code Skill</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green: #00ff88;
+      --green-dim: #00cc66;
+      --green-glow: rgba(0, 255, 136, 0.15);
+      --yellow: #ffd700;
+      --red: #ff4444;
+      --bg: #0a0a0a;
+      --bg2: #111111;
+      --bg3: #1a1a1a;
+      --border: #222222;
+      --text: #cccccc;
+      --text-dim: #666666;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Scanlines effect */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.03) 2px,
+        rgba(0,0,0,0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    /* Noise texture */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 99;
+      opacity: 0.4;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* HEADER */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 20px 0;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-family: 'Space Mono', monospace;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--green);
+      text-shadow: 0 0 20px var(--green-glow);
+      letter-spacing: -0.5px;
+    }
+
+    .logo span { color: var(--text-dim); }
+
+    .badge {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      padding: 3px 8px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* HERO */
+    .hero {
+      padding: 80px 0 60px;
+      position: relative;
+    }
+
+    .hero-eyebrow {
+      font-size: 0.7rem;
+      color: var(--green);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.1s;
+    }
+
+    .hero-eyebrow::before { content: '$ '; color: var(--text-dim); }
+
+    h1 {
+      font-family: 'Space Mono', monospace;
+      font-size: clamp(2.4rem, 6vw, 4rem);
+      font-weight: 700;
+      line-height: 1.05;
+      color: #ffffff;
+      margin-bottom: 24px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.2s;
+    }
+
+    h1 .accent { color: var(--green); text-shadow: 0 0 30px rgba(0,255,136,0.4); }
+
+    .hero-desc {
+      font-size: 0.9rem;
+      color: var(--text-dim);
+      line-height: 1.8;
+      max-width: 520px;
+      margin-bottom: 40px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.3s;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.4s;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--green);
+      color: #000;
+      font-weight: 700;
+    }
+
+    .btn-primary:hover {
+      background: #ffffff;
+      box-shadow: 0 0 30px rgba(0,255,136,0.3);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--green);
+      border: 1px solid var(--green);
+    }
+
+    .btn-secondary:hover {
+      background: var(--green-glow);
+    }
+
+    /* TERMINAL DEMO */
+    .terminal-wrap {
+      margin: 60px 0;
+      opacity: 0;
+      animation: fadeUp 0.6s ease forwards 0.5s;
+    }
+
+    .terminal {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .terminal-bar {
+      background: var(--bg3);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-red { background: #ff5f57; }
+    .dot-yellow { background: #febc2e; }
+    .dot-green { background: #28c840; }
+
+    .terminal-title {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      margin-left: 8px;
+      letter-spacing: 1px;
+    }
+
+    .terminal-body {
+      padding: 20px 24px;
+      font-size: 0.82rem;
+      line-height: 2;
+    }
+
+    .t-prompt { color: var(--green); }
+    .t-cmd { color: #ffffff; }
+    .t-comment { color: var(--text-dim); }
+    .t-success { color: var(--green); }
+    .t-warn { color: var(--yellow); }
+    .t-url { color: #88ccff; text-decoration: underline; }
+    .t-skill { color: var(--green); font-weight: 700; }
+
+    .blink {
+      display: inline-block;
+      width: 8px;
+      height: 14px;
+      background: var(--green);
+      vertical-align: middle;
+      animation: blink 1s step-end infinite;
+    }
+
+    /* FLOW */
+    .section { padding: 60px 0; border-top: 1px solid var(--border); }
+
+    .section-label {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 40px;
+    }
+
+    .section-label::before { content: '// '; }
+
+    h2 {
+      font-family: 'Space Mono', monospace;
+      font-size: 1.4rem;
+      color: #fff;
+      margin-bottom: 32px;
+    }
+
+    .flow {
+      display: grid;
+      gap: 0;
+    }
+
+    .flow-step {
+      display: grid;
+      grid-template-columns: 48px 1fr;
+      gap: 20px;
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+      opacity: 0;
+      transform: translateX(-10px);
+      transition: all 0.4s ease;
+    }
+
+    .flow-step.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .flow-step:last-child { border-bottom: none; }
+
+    .step-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      padding-top: 2px;
+    }
+
+    .step-content h3 {
+      font-size: 0.9rem;
+      color: #fff;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .step-content p {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      line-height: 1.7;
+    }
+
+    .step-icon {
+      display: inline-block;
+      margin-right: 8px;
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 0.6rem;
+      padding: 2px 6px;
+      border: 1px solid;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    .tag-auto { color: var(--green); border-color: var(--green); }
+    .tag-ask { color: var(--yellow); border-color: var(--yellow); }
+    .tag-safe { color: #88ccff; border-color: #88ccff; }
+
+    /* SKILL PREVIEW */
+    .skill-preview {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .skill-bar {
+      background: var(--bg3);
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .skill-filename {
+      font-size: 0.72rem;
+      color: var(--green);
+    }
+
+    .skill-lang {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      letter-spacing: 1px;
+    }
+
+    .skill-body {
+      padding: 20px 24px;
+      font-size: 0.78rem;
+      line-height: 1.9;
+      overflow-x: auto;
+    }
+
+    .yaml-key { color: #88ccff; }
+    .yaml-val { color: var(--green); }
+    .yaml-sep { color: var(--text-dim); }
+    .md-h1 { color: #fff; font-weight: 700; }
+    .md-h2 { color: #ddd; }
+    .md-h3 { color: var(--text-dim); }
+    .md-quote { color: var(--yellow); }
+    .md-code { color: var(--green-dim); }
+    .md-bold { color: #fff; font-weight: 600; }
+
+    /* INSTALL */
+    .install-box {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      padding: 28px;
+      margin-bottom: 16px;
+    }
+
+    .install-box h3 {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .install-cmd {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 14px 16px;
+    }
+
+    .install-cmd code {
+      font-size: 0.85rem;
+      color: var(--green);
+    }
+
+    .copy-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      padding: 4px 10px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .copy-btn:hover { color: var(--green); border-color: var(--green); }
+    .copy-btn.copied { color: var(--green); border-color: var(--green); }
+
+    .install-note {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      margin-top: 12px;
+      line-height: 1.7;
+    }
+
+    .install-note a { color: var(--green); text-decoration: none; }
+    .install-note a:hover { text-decoration: underline; }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 0;
+      margin-top: 40px;
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .footer-left {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .footer-links a {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover { color: var(--green); }
+
+    /* ANIMATIONS */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+
+    /* MOBILE */
+    @media (max-width: 600px) {
+      .hero { padding: 48px 0 40px; }
+      h1 { font-size: 2rem; }
+      .hero-actions { flex-direction: column; }
+      .btn { justify-content: center; }
+      .footer-inner { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="header-inner">
+      <div class="logo">deploj<span>-</span>gke<span>.dev</span></div>
+      <div class="badge">Claude Code Skill</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="container">
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-eyebrow">agent skill for gke deployments</div>
+      <h1>Deploy na GKE.<br><span class="accent">Bez bólu głowy.</span></h1>
+      <p class="hero-desc">
+        Skill dla Claude Code który ogarnia cały pipeline: docker build, push do GCR, kubectl deploy, LoadBalancer i External IP — wszystko w jednym <code style="color:var(--green)">/deploj-gke</code>.
+      </p>
+      <div class="hero-actions">
+        <a href="#install" class="btn btn-primary">↓ Zainstaluj</a>
+        <a href="#skill" class="btn btn-secondary">Podgląd SKILL.md</a>
+      </div>
+    </section>
+
+    <!-- TERMINAL DEMO -->
+    <div class="terminal-wrap">
+      <div class="terminal">
+        <div class="terminal-bar">
+          <div class="dot dot-red"></div>
+          <div class="dot dot-yellow"></div>
+          <div class="dot dot-green"></div>
+          <span class="terminal-title">claude-code — projekt/</span>
+        </div>
+        <div class="terminal-body">
+          <div><span class="t-prompt">❯ </span><span class="t-cmd">/deploj-gke moja-apka my-gcp-project-123</span></div>
+          <div>&nbsp;</div>
+          <div><span class="t-skill">🚀 Używam skilla `deploj-gke`</span></div>
+          <div>&nbsp;</div>
+          <div><span class="t-comment"># Buduję obraz Docker...</span></div>
+          <div><span class="t-prompt">  </span>docker build -t gcr.io/my-gcp-project-123/moja-apka:a3f8c12 .</div>
+          <div><span class="t-success">  ✓ Build zakończony</span></div>
+          <div>&nbsp;</div>
+          <div><span class="t-comment"># Sprawdzam GCR...</span></div>
+          <div><span class="t-success">  ✓ GCR aktywne</span></div>
+          <div><span class="t-prompt">  </span>docker push gcr.io/my-gcp-project-123/moja-apka:a3f8c12</div>
+          <div><span class="t-success">  ✓ Push zakończony</span></div>
+          <div>&nbsp;</div>
+          <div><span class="t-comment"># Aktualizuję deployment...</span></div>
+          <div><span class="t-prompt">  </span>kubectl set image deployment/moja-apka moja-apka=gcr.io/...</div>
+          <div><span class="t-prompt">  </span>kubectl rollout status deployment/moja-apka --timeout=120s</div>
+          <div><span class="t-success">  ✓ Rollout zakończony sukcesem</span></div>
+          <div>&nbsp;</div>
+          <div><span class="t-comment"># Czekam na External IP...</span></div>
+          <div><span class="t-success">  ✓ LoadBalancer gotowy</span></div>
+          <div>&nbsp;</div>
+          <div><span class="t-success">✅ Deploy zakończony sukcesem!</span></div>
+          <div><span class="t-success">🌍 Aplikacja dostępna pod: </span><span class="t-url">http://34.118.42.77</span></div>
+          <div>&nbsp;</div>
+          <div><span class="t-prompt">❯ </span><span class="blink"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLOW -->
+    <section class="section" id="flow">
+      <div class="section-label">Co robi skill</div>
+      <div class="flow">
+
+        <div class="flow-step">
+          <div class="step-num">01</div>
+          <div class="step-content">
+            <h3><span class="step-icon">🔨</span> Docker Build <span class="tag tag-auto">auto</span></h3>
+            <p>Buduje obraz lokalnie z git commit hash jako tagiem. Przy błędzie zatrzymuje się i pokazuje logi.</p>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-num">02</div>
+          <div class="step-content">
+            <h3><span class="step-icon">🔍</span> Sprawdza GCR <span class="tag tag-ask">pyta</span></h3>
+            <p>Weryfikuje czy Container Registry jest włączone w projekcie GCP. Jeśli nie — pyta o zgodę z należytą kurtuazją przed aktywacją.</p>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-num">03</div>
+          <div class="step-content">
+            <h3><span class="step-icon">📤</span> Docker Push <span class="tag tag-auto">auto</span></h3>
+            <p>Pushuje obraz do <code style="color:var(--green-dim)">gcr.io/$PROJECT/$APP:$COMMIT</code>.</p>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-num">04</div>
+          <div class="step-content">
+            <h3><span class="step-icon">☸️</span> kubectl deploy + rollout <span class="tag tag-safe">safe</span></h3>
+            <p>Aktualizuje deployment i czeka na rollout. Przy niepowodzeniu w 120s — automatyczny rollback.</p>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-num">05</div>
+          <div class="step-content">
+            <h3><span class="step-icon">🌐</span> LoadBalancer + External IP <span class="tag tag-auto">auto</span></h3>
+            <p>Tworzy Service typu LoadBalancer jeśli nie istnieje. Czeka na przydzielenie External IP przez GKE.</p>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="step-num">06</div>
+          <div class="step-content">
+            <h3><span class="step-icon">✅</span> Pełen sukces</h3>
+            <p>Wyświetla URL pod którym aplikacja jest dostępna. Bez sukcesu — nie kończy.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SKILL PREVIEW -->
+    <section class="section" id="skill">
+      <div class="section-label">Podgląd SKILL.md</div>
+      <div class="skill-preview">
+        <div class="skill-bar">
+          <span class="skill-filename">SKILL.md</span>
+          <span class="skill-lang">YAML + Markdown</span>
+        </div>
+        <div class="skill-body">
+<pre><span class="yaml-sep">---</span>
+<span class="yaml-key">name</span><span class="yaml-sep">:</span> <span class="yaml-val">deploj-gke</span>
+<span class="yaml-key">description</span><span class="yaml-sep">:</span> <span class="yaml-val">Deploys application to GKE using kubectl.</span>
+<span class="yaml-key">         </span>  <span class="yaml-val">Use when deploying, updating or rolling back.</span>
+<span class="yaml-key">allowed-tools</span><span class="yaml-sep">:</span> <span class="yaml-val">Bash</span>
+<span class="yaml-sep">---</span>
+
+<span class="md-h1"># Deploy na GKE</span>
+
+<span class="md-h2">## Pierwsze słowa</span>
+Zawsze rozpocznij od:
+<span class="md-quote">&gt; 🚀 Używam skilla `deploj-gke`</span>
+
+<span class="md-h2">## Kroki deployu</span>
+
+<span class="md-h3">### 1. Docker Build</span>
+<span class="md-code">```bash
+IMAGE_TAG=$(git rev-parse --short HEAD)
+docker build -t gcr.io/$GCP_PROJECT/$APP_NAME:$IMAGE_TAG .
+```</span>
+
+<span class="md-h3">### 2. Sprawdź GCR</span>
+Jeśli nie włączone — zapytaj dosłownie:
+<span class="md-quote">&gt; Jaśnie Panie Arcyhrabio, GCR nie jest uruchomione...</span>
+
+<span class="md-h3">### 3–6. Push → Deploy → LoadBalancer → IP</span>
+<span class="t-comment">... pełna treść w repozytorium ...</span></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- INSTALL -->
+    <section class="section" id="install">
+      <div class="section-label">Instalacja</div>
+
+      <div class="install-box">
+        <h3>Instalacja globalna (wszystkie projekty)</h3>
+        <div class="install-cmd">
+          <code>mkdir -p ~/.claude/skills/deploj-gke && curl -sL https://raw.githubusercontent.com/slawekgh/deploj-gke/main/SKILL.md -o ~/.claude/skills/deploj-gke/SKILL.md</code>
+          <button class="copy-btn" onclick="copyCmd(this, 'mkdir -p ~/.claude/skills/deploj-gke && curl -sL https://raw.githubusercontent.com/slawekgh/deploj-gke/main/SKILL.md -o ~/.claude/skills/deploj-gke/SKILL.md')">COPY</button>
+        </div>
+        <p class="install-note">Skill będzie dostępny we wszystkich projektach. Uruchom ponownie Claude Code po instalacji.</p>
+      </div>
+
+      <div class="install-box">
+        <h3>Instalacja w projekcie (tylko ten repo)</h3>
+        <div class="install-cmd">
+          <code>mkdir -p .claude/skills/deploj-gke && curl -sL https://raw.githubusercontent.com/slawekgh/deploj-gke/main/SKILL.md -o .claude/skills/deploj-gke/SKILL.md</code>
+          <button class="copy-btn" onclick="copyCmd(this, 'mkdir -p .claude/skills/deploj-gke && curl -sL https://raw.githubusercontent.com/slawekgh/deploj-gke/main/SKILL.md -o .claude/skills/deploj-gke/SKILL.md')">COPY</button>
+        </div>
+        <p class="install-note">Możesz też <a href="https://github.com/slawekgh/deploj-gke/archive/refs/heads/main.zip">pobrać ZIP</a> i wypakować ręcznie.</p>
+      </div>
+
+      <div class="install-box">
+        <h3>Wymagania</h3>
+        <div style="font-size:0.8rem; line-height:2; color:var(--text-dim);">
+          <div><span style="color:var(--green)">✓</span> Claude Code v1.0+</div>
+          <div><span style="color:var(--green)">✓</span> docker</div>
+          <div><span style="color:var(--green)">✓</span> kubectl skonfigurowany na klaster GKE</div>
+          <div><span style="color:var(--green)">✓</span> gcloud zalogowany z uprawnieniami do GCR i GKE</div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-left">deploj-gke.dev — MIT License</div>
+      <div class="footer-links">
+        <a href="https://github.com/slawekgh/deploj-gke">GitHub</a>
+        <a href="https://code.claude.com/docs/en/skills">Claude Code Docs</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Animate flow steps on scroll
+  const steps = document.querySelectorAll('.flow-step');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        setTimeout(() => entry.target.classList.add('visible'), i * 80);
+      }
+    });
+  }, { threshold: 0.1 });
+  steps.forEach(s => observer.observe(s));
+
+  // Copy button
+  function copyCmd(btn, text) {
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'COPIED';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'COPY';
+        btn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+
+  // Smooth scroll
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      document.querySelector(a.getAttribute('href'))?.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+</script>
+
+</body>
+</html>
