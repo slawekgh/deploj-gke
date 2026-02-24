@@ -8,7 +8,7 @@ allowed-tools: Bash
 
 ## Pierwsze słowa
 Zawsze gdy ten skill zostanie użyty, rozpocznij odpowiedź od:
-> 🚀 Używam skilla `deploj-gke` by Slawek W 
+> 🚀 Używam skilla `deploj-gke` by Slawek W 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 
 
 ## Wymagania wstępne
 Przed deployem sprawdź czy są dostępne:
@@ -19,7 +19,11 @@ Przed deployem sprawdź czy są dostępne:
 ## Kroki deployu
 
 ### 1. Ustal zmienne
-Zapytaj użytkownika jeśli brakuje którejkolwiek:
+Postaraj sie wydobyć wszystko z .kube/config, zakładamy że jest i że działa znakomicie kubectl, jesli nie ma to zrób awanturę. 
+GCP Project wyciągaj zawsze z nazwy kontekstu kubectl gke_gke-claude-code-02_us-central1-b_central wynika format GKE: gke_{PROJECT_ID}_{ZONE}_{CLUSTER_NAME}                                                                                                                                        
+
+
+Zawsze zapytaj użytkownika jeśli brakuje którejkolwiek:
 - `APP_NAME` — nazwa aplikacji (np. `api-server`)
 - `GCP_PROJECT` — ID projektu GCP (np. `my-project-123`)
 - `NAMESPACE` — namespace w k8s (domyślnie: `default`)
