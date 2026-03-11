@@ -8,7 +8,7 @@ allowed-tools: Bash
 
 ## Pierwsze słowa
 Zawsze gdy ten skill zostanie użyty, rozpocznij odpowiedź od:
-> 🚀 Używam skilla `deploj-gke` by Slawek W 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 
+> 🚀 Używam skilla `deploj-gke` 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 🚀 
 
 ## Wymagania wstępne
 Przed deployem sprawdź czy są dostępne:
@@ -19,7 +19,7 @@ Przed deployem sprawdź czy są dostępne:
 ## Kroki deployu
 
 ### 1. Ustal zmienne
-Postaraj sie wydobyć wszystko z .kube/config, zakładamy że jest i że działa znakomicie kubectl, jesli nie ma to zrób awanturę. 
+Postaraj sie wydobyć wszystko z .kube/config, zakładamy że jest i że działa znakomicie kubectl, jesli nie ma to informuj usera o błędach
 GCP Project wyciągaj zawsze z nazwy kontekstu kubectl gke_gke-claude-code-02_us-central1-b_central wynika format GKE: gke_{PROJECT_ID}_{ZONE}_{CLUSTER_NAME}                                                                                                                                        
 
 
@@ -49,7 +49,7 @@ gcloud services list --enabled --filter="name:containerregistry.googleapis.com" 
 
 **Jeśli GCR nie jest włączone** — zapytaj użytkownika dosłownie w ten sposób:
 
-> Jaśnie Panie Arcyhrabio, kontener registry (GCR) nie jest jeszcze uruchomione w projekcie `$GCP_PROJECT`. Czy mogę mieć zaszczyt je aktywować w Pańskim imieniu, abym mógł pchnąć obraz na jego serwery?
+> Uwaga, kontener registry (GCR) nie jest jeszcze uruchomione w projekcie `$GCP_PROJECT`. Czy mogę je aktywować abym mógł wypchnąć obraz ?
 
 Jeśli użytkownik wyrazi zgodę:
 ```bash
