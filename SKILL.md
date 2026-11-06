@@ -1,6 +1,6 @@
 ---
 name: deploj-gke
-description: Deploys application to GKE cluster using kubectl. Use when deploying an app, updating a deployment, checking rollout status, or rolling back. Covers: docker build, push to GCR, kubectl set image, rollout status, LoadBalancer service, rollback.
+description: "Deploys application to GKE cluster using kubectl. Use when deploying an app, updating a deployment, checking rollout status, or rolling back. Covers: docker build, push to GCR, kubectl set image, rollout status, LoadBalancer service, rollback."
 allowed-tools: Bash
 ---
 
